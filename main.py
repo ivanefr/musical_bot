@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters, ConversationHandler
 import os
 
 
@@ -12,19 +12,56 @@ async def start_command(update: Update, context: CallbackContext):
 
 async def help_command(update: Update, context: CallbackContext):
     list_of_commands = ["/start - команда для старта бота",
-                        "/help - список всех команд бота", ]
+                        "/help - список всех команд бота",
+                        "/shazam - распознавание музыки"]
 
     await update.message.reply_text("\n".join(list_of_commands))
+
+
+async def shazam_command(update: Update, context: CallbackContext):
+    await update.message.reply_text("С помощью этой команды вы можете распознать название и автора интересующегося"
+                                    " вам произведения. Пришлите голосовое сообщение с данной музыкой.")
+    await update.message.reply_text("Если желаете прекратить функцию shazam отправьте /stop_shazam")
+    return 1
+
+
+async def audio_recognition(update: Update, context: CallbackContext):
+    await update.message.reply_text("Сообщение получено, обработка...")
+    audio = update.message.voice
+    print(audio)
+
+
+async def bad_audio(update: Update, context: CallbackContext):
+    await update.message.reply_text("Это не голосовое сообщение!!!")
+    await update.message.reply_text("Если желаете прекратить функцию shazam отправьте /stop_shazam")
+    return 1
+
+
+async def stop_shazam_command(update: Update, context: CallbackContext):
+    await update.message.reply_text("stopping shazam")
 
 
 def main():
     token = os.environ["BOT_TOKEN"]
     app = Application.builder().token(token).build()
 
+    # handlers for commands
     command_handlers = {"start": start_command, "help": help_command}
-
     for command, function in command_handlers.items():
         app.add_handler(CommandHandler(command, function))
+
+    # conversation handler for shazam
+    shazam_handler = ConversationHandler(
+        entry_points=[CommandHandler("shazam", shazam_command)],
+
+        states={
+            1: [MessageHandler(filters.VOICE, audio_recognition),
+                MessageHandler(~filters.VOICE, bad_audio)]
+        },
+
+        fallbacks=[CommandHandler("stop_shazam", stop_shazam_command)]
+    )
+    app.add_handler(shazam_handler)
 
     app.run_polling()
 
