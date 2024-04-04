@@ -45,6 +45,7 @@ async def audio_recognition(update: Update, context: CallbackContext):
 
     song = Song(filename)
     await song.recognize_data()
+    os.remove(filename)
     artist = song.artist
     title = song.title
 
