@@ -1,14 +1,22 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters, ConversationHandler
+from telegram.ext import (Application, CommandHandler, MessageHandler,
+                          CallbackContext, filters, ConversationHandler)
 import os
 from shazam import Song
+import logging
+
+# start logging
+logging.basicConfig(
+    format="%(asctime)s - [%(levelname)s] -  %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s", level=logging.DEBUG
+)
+logger = logging.getLogger(__name__)
 
 WAIT_VOICE = 1
 
 
+
 async def start_command(update: Update, context: CallbackContext):
     user = update.effective_user
-
     text = f"Привет {user.full_name}, я музыкальный бот, чтобы получить список комманд напишите\n/help"
     await update.message.reply_text(text)
 
@@ -32,9 +40,10 @@ async def audio_recognition(update: Update, context: CallbackContext):
     await update.message.reply_text("Сообщение получено, обработка...")
     audio = update.message.voice
     file = await audio.get_file()
-    data = await file.download_as_bytearray()
+    filename = f"{update.message.chat_id}.mp3"
+    await file.download_to_drive(filename)
 
-    song = Song(data)
+    song = Song(filename)
     await song.recognize_data()
     artist = song.artist
     title = song.title

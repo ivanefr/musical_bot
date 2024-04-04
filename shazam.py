@@ -2,16 +2,15 @@ from shazamio import Shazam, Serialize
 
 
 class Song:
-    def __init__(self, data):
-        self.data = data
-        self.file_path = "voice.mp3"
+    def __init__(self, path):
+        self.path = path
         self.__shazam = Shazam(language="ru-RU")
         self.__out = None
         self.__artist = None
         self.__title = None
 
     async def recognize_data(self):
-        self.__out = await self.__shazam.recognize(data=self.data)
+        self.__out = await self.__shazam.recognize(data=self.path)
         serialize = Serialize.full_track(self.__out)
         track = serialize.track
         if track is not None:
