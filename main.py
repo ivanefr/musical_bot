@@ -1,6 +1,9 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters, ConversationHandler
 import os
+from shazam import Song
+
+WAIT_VOICE = 1
 
 
 async def start_command(update: Update, context: CallbackContext):
@@ -22,23 +25,37 @@ async def shazam_command(update: Update, context: CallbackContext):
     await update.message.reply_text("С помощью этой команды вы можете распознать название и автора интересующегося"
                                     " вам произведения. Пришлите голосовое сообщение с данной музыкой.")
     await update.message.reply_text("Если желаете прекратить функцию shazam отправьте /stop_shazam")
-    return 1
+    return WAIT_VOICE
 
 
 async def audio_recognition(update: Update, context: CallbackContext):
     await update.message.reply_text("Сообщение получено, обработка...")
     audio = update.message.voice
-    print(audio)
+    file = await audio.get_file()
+    data = await file.download_as_bytearray()
+
+    song = Song(data)
+    await song.recognize_data()
+    artist = song.artist
+    title = song.title
+
+    if artist and title:
+        await update.message.reply_text(f"Трек распознан!!!\nИсполнитель: {artist}\nНазвание: {title}")
+    else:
+        await update.message.reply_text("Трек не распознался, попытайтесь ещё раз")
+        return WAIT_VOICE
+    return ConversationHandler.END
 
 
 async def bad_audio(update: Update, context: CallbackContext):
     await update.message.reply_text("Это не голосовое сообщение!!!")
     await update.message.reply_text("Если желаете прекратить функцию shazam отправьте /stop_shazam")
-    return 1
+    return WAIT_VOICE
 
 
 async def stop_shazam_command(update: Update, context: CallbackContext):
     await update.message.reply_text("stopping shazam")
+    return ConversationHandler.END
 
 
 def main():
@@ -55,8 +72,8 @@ def main():
         entry_points=[CommandHandler("shazam", shazam_command)],
 
         states={
-            1: [MessageHandler(filters.VOICE, audio_recognition),
-                MessageHandler(~filters.VOICE, bad_audio)]
+            WAIT_VOICE: [MessageHandler(filters.VOICE, audio_recognition),
+                         MessageHandler(~filters.VOICE & ~filters.COMMAND, bad_audio)]
         },
 
         fallbacks=[CommandHandler("stop_shazam", stop_shazam_command)]
