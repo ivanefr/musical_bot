@@ -1,26 +1,39 @@
 from shazamio import Shazam, Serialize
+from shazamio.schemas.artists import ArtistInfo, ArtistV2
+from shazamio.schemas.models import ResponseTrack
 
 
-class Song:
+shazam = Shazam("RU")
+
+
+class Track:
     def __init__(self, data):
         self.data = data
-        self.__shazam = Shazam(language="ru-RU")
-        self.__out = None
-        self.__artist = None
-        self.__title = None
+        self.__full_track: ResponseTrack | None = None
 
     async def recognize_data(self):
-        self.__out = await self.__shazam.recognize(data=self.data)
-        serialize = Serialize.full_track(self.__out)
-        track = serialize.track
-        if track is not None:
-            self.__artist = track.subtitle
-            self.__title = track.title
-
-    @property
-    def artist(self):
-        return self.__artist
+        self.__out = await shazam.recognize(data=self.data)
+        self.__full_track = Serialize.full_track(self.__out)
 
     @property
     def title(self):
-        return self.__title
+        return self.__full_track.track.title
+
+    @property
+    def artist(self):
+        return self.__full_track.track.subtitle
+
+    @property
+    def album(self):
+        album = self.__out["track"]["sections"][0]["metadata"][0]["text"]
+        return album
+
+    @property
+    def released(self):
+        date = self.__out["track"]["sections"][0]["metadata"][-1]["text"]
+        return date
+
+    @property
+    def genre(self):
+        genre = self.__out["track"]["genres"]["primary"]
+        return genre
