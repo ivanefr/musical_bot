@@ -1,2 +1,3 @@
 shazamio==0.5.1
 python-telegram-bot==21.0.1
+ffmpeg-downloader==0.3.0
