@@ -12,39 +12,34 @@
 
 # Установка бота на свой компьютер
 
-## Клонирование репозитория
+### Клонирование репозитория
 ```bash
 git clone https://github.com/ivanefr/musical_bot.git
 cd musical_bot
 ```
-## Установка зависимостей 
+### Установка зависимостей 
 
 ```bash
 pip install -r requirements.txt
 ```
-или 
 
-```bash
-pip install install python-telegram-bot  shazamio
-```
-
-Для полноценного запуска бота также не обходимо установить [FFmpeg](https://ru.wikipedia.org/wiki/FFmpeg) в PATH
+Для полноценного запуска бота также необходимо установить [FFmpeg](https://ru.wikipedia.org/wiki/FFmpeg) в PATH
 ```bash
 ffdl install --add-path
 ```
 
-Запуск
+### Запуск
 
 ```bash
 python main.py
 ```
 
-## Запуск бота
+# Запуск бота
 Для запуска следует отправить боту сообщение `/start`
 
 Бота можно найти по [ссылке](https://t.me/MusicalYandexLyceumBot).
 
-## Функции бота
+# Функции бота
 Данный музыкальный бот позволит вам скачивать музыку, получать информацию о треке и многое другое.
 
 Подробно о функциях можно узнать отправив боту команду `/help`
