@@ -77,7 +77,7 @@ async def info_command(update: Update, context: CallbackContext):
     released = track.released
     genre = track.genre
     text = f"Альбом: {album}\nДата релиза: {released}\nЖанр произведения: {genre}"
-    await update.message.reply_text(text)
+    await update.message.reply_photo(track.coverart_url, text)
     await stop_shazam_command(update, context)
     return ConversationHandler.END
 

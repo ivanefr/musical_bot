@@ -1,5 +1,4 @@
 from shazamio import Shazam, Serialize
-from shazamio.schemas.artists import ArtistInfo, ArtistV2
 from shazamio.schemas.models import ResponseTrack
 
 
@@ -37,3 +36,8 @@ class Track:
     def genre(self):
         genre = self.__out["track"]["genres"]["primary"]
         return genre
+
+    @property
+    def coverart_url(self):
+        url = self.__out["track"]["sections"][0]["metapages"][1]["image"]
+        return url
