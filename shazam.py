@@ -16,8 +16,9 @@ class Track:
 
     @property
     def title(self):
-        return self.__full_track.track.title
-
+        if self.__full_track.track is not None:
+            return self.__full_track.track.title
+        return None
     @property
     def artist(self):
         return self.__full_track.track.subtitle
