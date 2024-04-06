@@ -2,6 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (CallbackContext, CallbackQueryHandler, CommandHandler,
                           ConversationHandler, MessageHandler, filters)
 from recognizer import Track
+from database import add_track
 
 RECOGNIZE_OR_EXIT = 0
 WAIT_VOICE = 1
@@ -52,10 +53,16 @@ async def audio_recognition(update: Update, context: CallbackContext):
 
     if track.title:
         context.user_data["track"] = track
-        await update.message.reply_text(
-            f"Трек распознан!!!\nИсполнитель: {track.artist}\nНазвание:       {track.title}")
-        await ask_extra_question(update, context)
-        return EXTRA_INFO
+        await update.message.reply_text(f"Трек распознан!!!\n"
+                                        f"Исполнитель: {track.artist}\n"
+                                        f"Название: {track.title}")
+        add_track(update.message.chat_id, track.title, track.artist, track.album,
+                  track.genre, track.coverart_url, track.released)
+        if any((track.genre, track.released, track.album)):
+            await ask_extra_question(update, context)
+            return EXTRA_INFO
+        else:
+            return await stop_shazam_command(update, context)
     else:
         keyboard = [
             [
@@ -90,9 +97,16 @@ async def info_command(update: Update, context: CallbackContext):
     album = track.album
     released = track.released
     genre = track.genre
-    text = f"Альбом: {album}\nДата релиза: {released}\nЖанр произведения: {genre}"
+    text = []
+    if album is not None:
+        text.append(f"Альбом: {album}")
+    if released is not None:
+        text.append(f"Дата релиза: {released}")
+    if genre is not None:
+        text.append(f"Жанр произведения: {genre}")
+    text = '\n'.join(text)
     if track.coverart_url is not None:
-        await context.bot.send_photo(chat_id=update.callback_query.message.chat_id,
+        await context.bot.send_photo(chat_id=update.callback_query.message.chat.id,
                                      photo=track.coverart_url,
                                      caption=text)
     else:

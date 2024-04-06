@@ -1,7 +1,6 @@
 from shazamio import Shazam, Serialize
 from shazamio.schemas.models import ResponseTrack
 
-
 shazam = Shazam("RU")
 
 
@@ -19,23 +18,39 @@ class Track:
         if self.__full_track.track is not None:
             return self.__full_track.track.title
         return None
+
     @property
     def artist(self):
         return self.__full_track.track.subtitle
 
     @property
     def album(self):
-        album = self.__out["track"]["sections"][0]["metadata"][0]["text"]
+        try:
+            album = self.__out["track"]["sections"][0]["metadata"][0]["text"]
+        except IndexError:
+            return None
+        except KeyError:
+            return None
         return album
 
     @property
     def released(self):
-        date = self.__out["track"]["sections"][0]["metadata"][-1]["text"]
+        try:
+            date = self.__out["track"]["sections"][0]["metadata"][-1]["text"]
+        except IndexError:
+            return None
+        except KeyError:
+            return None
         return date
 
     @property
     def genre(self):
-        genre = self.__out["track"]["genres"]["primary"]
+        try:
+            genre = self.__out["track"]["genres"]["primary"]
+        except IndexError:
+            return None
+        except KeyError:
+            return None
         return genre
 
     @property
@@ -43,5 +58,7 @@ class Track:
         try:
             url = self.__out["track"]["sections"][0]["metapages"][1]["image"]
         except IndexError:
+            return None
+        except KeyError:
             return None
         return url
