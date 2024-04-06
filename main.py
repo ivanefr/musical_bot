@@ -1,6 +1,6 @@
-from telegram import Update
-from telegram.ext import (Application, CommandHandler, MessageHandler,
-                          CallbackContext, filters, ConversationHandler)
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputTextMessageContent, ReplyKeyboardRemove
+from telegram.ext import (Application, CallbackContext, CallbackQueryHandler,
+                          CommandHandler, ConversationHandler, MessageHandler, filters)
 import os
 from shazam import Track
 
@@ -24,10 +24,21 @@ async def help_command(update: Update, context: CallbackContext):
 
 
 async def shazam_command(update: Update, context: CallbackContext):
-    await update.message.reply_text("С помощью этой команды вы можете распознать название и автора интересующегося"
-                                    " вам произведения. Пришлите голосовое сообщение с данной музыкой.")
-    await update.message.reply_text("Если желаете прекратить функцию shazam отправьте /stop_shazam")
+    keyboard = [
+        [
+            InlineKeyboardButton("Распознать музыку", callback_data="recognize_music")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text("Нажмите на кнопку, чтобы распознать музыку:", reply_markup=reply_markup)
+
     return WAIT_VOICE
+
+
+async def recognize_music(update: Update, context: CallbackContext):
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text("Пришлите голосовое сообщение с музыкой.")
 
 
 async def audio_recognition(update: Update, context: CallbackContext):
@@ -51,24 +62,15 @@ async def audio_recognition(update: Update, context: CallbackContext):
 
 
 async def ask_extra_question(update: Update, context: CallbackContext):
-    commands = ["/info - Подробнее узнать о произведении",
-                "/stop_shazam - прекратить функцию shazam"]
-    await update.message.reply_text("Желаете узнать допольнительную информацию?\n" + "\n".join(commands))
+    keyboard = [
+        [
+            InlineKeyboardButton("Подробнее", callback_data="info"),
+            InlineKeyboardButton("Завершить", callback_data="stop_shazam")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-
-async def bad_audio(update: Update, context: CallbackContext):
-    await unknown_message_command(update, context)
-    return WAIT_VOICE
-
-
-async def stop_shazam_command(update: Update, context: CallbackContext):
-    context.user_data.clear()
-    await update.message.reply_text("Shazam прекратил свою работу")
-    return ConversationHandler.END
-
-
-async def unknown_message_command(update: Update, context: CallbackContext):
-    await update.message.reply_text("Неопознанная команда или сообщение.")
+    await update.message.reply_text("Желаете узнать дополнительную информацию?", reply_markup=reply_markup)
 
 
 async def info_command(update: Update, context: CallbackContext):
@@ -77,13 +79,35 @@ async def info_command(update: Update, context: CallbackContext):
     released = track.released
     genre = track.genre
     text = f"Альбом: {album}\nДата релиза: {released}\nЖанр произведения: {genre}"
-    await update.message.reply_photo(track.coverart_url, text)
-    await stop_shazam_command(update, context)
-    return ConversationHandler.END
+    await context.bot.send_photo(chat_id=update.callback_query.message.chat_id, photo=track.coverart_url, caption=text)
+    await update.callback_query.edit_message_text("Дополнительная информация:", reply_markup=InlineKeyboardMarkup([]))
+    return EXTRA_INFO
+
+
+async def stop_shazam_command(update: Update, context: CallbackContext):
+    context.user_data.clear()
+    await update.callback_query.edit_message_text("Shazam прекратил свою работу")
+    return WAIT_VOICE
+
+
+async def unknown_message_command(update: Update, context: CallbackContext):
+    await update.message.reply_text("Неопознанная команда или сообщение.")
+
+
+async def button_handler(update: Update, context: CallbackContext):
+    query = update.callback_query
+    data = query.data
+
+    if data == "recognize_music":
+        await recognize_music(update, context)
+    elif data == "info":
+        await info_command(update, context)
+    elif data == "stop_shazam":
+        await stop_shazam_command(update, context)
 
 
 def main():
-    token = os.environ["BOT_TOKEN"]
+    token = "6438049469:AAEASLen8m4g-qOHGW2L7LUUzkGyKyxpqr4"
     app = Application.builder().token(token).build()
 
     all_handlers = []
@@ -110,7 +134,8 @@ def main():
                 ],
             EXTRA_INFO:
                 [
-                    CommandHandler("info", info_command),
+                    CallbackQueryHandler(button_handler, pattern="info"),
+                    CallbackQueryHandler(button_handler, pattern="stop_shazam"),
                     end_conversation_handler,
                     unknown_text_handler,
                 ]
@@ -122,6 +147,8 @@ def main():
     all_handlers.append(shazam_handler)
 
     all_handlers.append(unknown_text_handler)
+
+    all_handlers.append(CallbackQueryHandler(button_handler))
 
     for handler in all_handlers:
         app.add_handler(handler)
