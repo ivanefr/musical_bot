@@ -40,5 +40,8 @@ class Track:
 
     @property
     def coverart_url(self):
-        url = self.__out["track"]["sections"][0]["metapages"][1]["image"]
+        try:
+            url = self.__out["track"]["sections"][0]["metapages"][1]["image"]
+        except IndexError:
+            return None
         return url
