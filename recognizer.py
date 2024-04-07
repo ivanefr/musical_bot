@@ -8,6 +8,7 @@ class Track:
     def __init__(self, data):
         self.data = data
         self.__full_track: ResponseTrack | None = None
+        self.__out = {}
 
     async def recognize_data(self):
         self.__out = await shazam.recognize(data=self.data)

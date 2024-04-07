@@ -13,5 +13,3 @@ class RecognizedTrack(SqlAlchemyBase):
     released = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     coverart_url = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     genre = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-
-
