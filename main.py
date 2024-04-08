@@ -19,8 +19,7 @@ async def help_command(update: Update, context: CallbackContext):
                         "/help - список всех команд бота",
                         "/shazam - распознавание музыки",
                         "/recognized - список распознанных треков",
-                        "/toptracks_world - топ-10 треков в мире",
-                        "/toptracks_russia - топ-10 треков в России"]
+                        "/top_tracks - топ треков в России и мире"]
 
     await update.message.reply_text("\n".join(list_of_commands))
 
@@ -91,8 +90,8 @@ def main():
 
     all_handlers.append(recognized_command_handler)
     all_handlers.append(shazam_handler)
-    all_handlers.append(unknown_text_handler)
     all_handlers.append(top_tracks_command_handler)
+    all_handlers.append(unknown_text_handler)
 
     for handler in all_handlers:
         app.add_handler(handler)
