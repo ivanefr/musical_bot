@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import (Application, CallbackContext, CommandHandler,
                           MessageHandler, filters)
 from shazam import shazam_handler
+from top_tracks import run_top_tracks
 import os
 from database import get_tracks
 import pymorphy2
@@ -17,9 +18,24 @@ async def help_command(update: Update, context: CallbackContext):
     list_of_commands = ["/start - команда для старта бота",
                         "/help - список всех команд бота",
                         "/shazam - распознавание музыки",
-                        "/recognized - список распознанных треков"]
+                        "/recognized - список распознанных треков",
+                        "/toptracks_world - топ-10 треков в мире",
+                        "/toptracks_russia - топ-10 треков в России"]
 
     await update.message.reply_text("\n".join(list_of_commands))
+
+
+async def top_tracks_command(update: Update, context: CallbackContext):
+    top_tracks_russia, top_tracks_world = run_top_tracks()
+
+    # Отправка сообщений с топ-треками
+    await update.message.reply_text("Топ-треки в России:")
+    for track in top_tracks_russia:
+        await update.message.reply_text(f"{track['title']} - {track['subtitle']}")
+
+    await update.message.reply_text("Топ-треки в мире:")
+    for track in top_tracks_world:
+        await update.message.reply_text(f"{track['title']} - {track['subtitle']}")
 
 
 async def recognized_command(update: Update, context: CallbackContext):
@@ -33,7 +49,7 @@ async def recognized_command(update: Update, context: CallbackContext):
     else:
         for track in recognized_tracks:
             text = [f"Исполнитель: {track.artist}",
-                    f"Название: {track.title}",]
+                    f"Название: {track.title}", ]
             if track.album is not None:
                 text.append(f"Альбом: {track.album}")
             if track.genre is not None:
@@ -70,11 +86,13 @@ def main():
         all_handlers.append(CommandHandler(command, function))
 
     unknown_text_handler = MessageHandler(filters.ALL, unknown_message_command)
+    top_tracks_command_handler = CommandHandler("top_tracks", top_tracks_command)
     recognized_command_handler = CommandHandler("recognized", recognized_command)
 
     all_handlers.append(recognized_command_handler)
     all_handlers.append(shazam_handler)
     all_handlers.append(unknown_text_handler)
+    all_handlers.append(top_tracks_command_handler)
 
     for handler in all_handlers:
         app.add_handler(handler)
