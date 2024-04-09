@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import (CallbackContext, CallbackQueryHandler, CommandHandler,
                           ConversationHandler, MessageHandler, filters)
 from recognizer import Track
@@ -7,6 +7,11 @@ from database import add_track
 RECOGNIZE_OR_EXIT = 0
 WAIT_VOICE = 1
 EXTRA_INFO = 2
+
+reply_keyboard = [['/shazam', '/recognized'],
+                  ['/top_tracks', '/top_tracks_ru'],
+                  ['/help']]
+COMMANDS_MARKUP = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
 
 async def shazam_command(update: Update, context: CallbackContext):
@@ -119,14 +124,15 @@ async def info_command(update: Update, context: CallbackContext):
 
 async def stop_shazam_command(update: Update, context: CallbackContext):
     context.user_data.clear()
-    await update.effective_user.send_message("Shazam прекратил свою работу")
+    await update.effective_user.send_message("Shazam прекратил свою работу", reply_markup=COMMANDS_MARKUP)
     return ConversationHandler.END
 
 
 async def stop_shazam_callback(update: Update, context: CallbackContext):
     context.user_data.clear()
-    await update.callback_query.edit_message_text("Shazam прекратил свою работу")
-    return ConversationHandler.END
+    await update.callback_query.delete_message()
+
+    return await stop_shazam_command(update, context)
 
 
 async def unknown_message_command(update: Update, context: CallbackContext):
