@@ -1,4 +1,5 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram import (Update, InlineKeyboardButton, InlineKeyboardMarkup,
+                      ReplyKeyboardMarkup, File)
 from telegram.ext import (CallbackContext, CallbackQueryHandler, CommandHandler,
                           ConversationHandler, MessageHandler, filters)
 from recognizer import Track
@@ -45,16 +46,13 @@ async def recognize_music_callback(update: Update, context: CallbackContext):
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.callback_query.edit_message_text("Пришлите голосовое сообщение с музыкой.",
+    await update.callback_query.edit_message_text("Пришлите голосовое сообщение или файл с музыкой.",
                                                   reply_markup=reply_markup)
 
     return WAIT_VOICE
 
 
-async def voice_recognition(update: Update, context: CallbackContext):
-    await update.message.reply_text("Сообщение получено, обработка...")
-    audio = update.message.voice
-    file = await audio.get_file()
+async def track_recognition(update: Update, context: CallbackContext, file: File):
     data = await file.download_as_bytearray()
 
     track = Track(data)
@@ -86,8 +84,19 @@ async def voice_recognition(update: Update, context: CallbackContext):
         return WAIT_VOICE
 
 
+async def voice_recognition(update: Update, context: CallbackContext):
+    await update.message.reply_text("Сообщение получено, обработка...")
+    voice = update.message.voice
+    file = await voice.get_file()
+    return await track_recognition(update, context, file)
+
+
 async def audio_recognition(update: Update, context: CallbackContext):
-    ...
+    await update.message.reply_text("Сообщение получено, обработка...")
+    audio = update.message.audio
+    file = await audio.get_file()
+    return await track_recognition(update, context, file)
+
 
 async def ask_extra_question(update: Update, context: CallbackContext):
     context.user_data["extra_info"] = True
