@@ -3,6 +3,10 @@ from telegram.ext import (CallbackContext, CallbackQueryHandler, CommandHandler,
                           ConversationHandler, MessageHandler, filters)
 from recognizer import Track
 from database import add_track
+from warnings import filterwarnings
+from telegram.warnings import PTBUserWarning
+
+filterwarnings(action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning)
 
 RECOGNIZE_OR_EXIT = 0
 WAIT_VOICE = 1
@@ -47,7 +51,7 @@ async def recognize_music_callback(update: Update, context: CallbackContext):
     return WAIT_VOICE
 
 
-async def audio_recognition(update: Update, context: CallbackContext):
+async def voice_recognition(update: Update, context: CallbackContext):
     await update.message.reply_text("Сообщение получено, обработка...")
     audio = update.message.voice
     file = await audio.get_file()
@@ -81,6 +85,9 @@ async def audio_recognition(update: Update, context: CallbackContext):
                                         reply_markup=reply_markup)
         return WAIT_VOICE
 
+
+async def audio_recognition(update: Update, context: CallbackContext):
+    ...
 
 async def ask_extra_question(update: Update, context: CallbackContext):
     context.user_data["extra_info"] = True
@@ -172,7 +179,8 @@ shazam_handler = ConversationHandler(
             ],
         WAIT_VOICE:
             [
-                MessageHandler(filters.VOICE, audio_recognition),
+                MessageHandler(filters.AUDIO, audio_recognition),
+                MessageHandler(filters.VOICE, voice_recognition),
                 CallbackQueryHandler(stop_shazam_callback, pattern="stop_shazam"),
                 end_conversation_handler,
                 unknown_text_handler
