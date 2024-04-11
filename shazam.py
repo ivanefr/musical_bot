@@ -16,7 +16,8 @@ EXTRA_INFO = 2
 reply_keyboard = [['/shazam', '/recognized'],
                   ['/top_tracks', '/top_tracks_ru'],
                   ['/help']]
-COMMANDS_MARKUP = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
+COMMANDS_MARKUP = ReplyKeyboardMarkup(reply_keyboard,
+                                      resize_keyboard=True)
 
 
 async def shazam_command(update: Update, context: CallbackContext):
@@ -98,6 +99,13 @@ async def audio_recognition(update: Update, context: CallbackContext):
     return await track_recognition(update, context, file)
 
 
+async def video_recognition(update: Update, context: CallbackContext):
+    await update.message.reply_text("Сообщение получено, обработка...")
+    video = update.message.video
+    file = await video.get_file()
+    return await track_recognition(update, context, file)
+
+
 async def ask_extra_question(update: Update, context: CallbackContext):
     context.user_data["extra_info"] = True
     keyboard = [
@@ -146,9 +154,8 @@ async def stop_shazam_command(update: Update, context: CallbackContext):
 
 async def stop_shazam_callback(update: Update, context: CallbackContext):
     context.user_data.clear()
-    await update.callback_query.delete_message()
-
-    return await stop_shazam_command(update, context)
+    await update.callback_query.edit_message_text("Shazam прекратил свою работу")
+    return ConversationHandler.END
 
 
 async def unknown_message_command(update: Update, context: CallbackContext):
@@ -189,6 +196,7 @@ shazam_handler = ConversationHandler(
         WAIT_VOICE:
             [
                 MessageHandler(filters.AUDIO, audio_recognition),
+                MessageHandler(filters.VIDEO, video_recognition),
                 MessageHandler(filters.VOICE, voice_recognition),
                 CallbackQueryHandler(stop_shazam_callback, pattern="stop_shazam"),
                 end_conversation_handler,

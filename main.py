@@ -10,7 +10,8 @@ import pymorphy2
 reply_keyboard = [['/shazam', '/recognized'],
                   ['/top_tracks', '/top_tracks_ru'],
                   ['/help']]
-COMMANDS_MARKUP = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
+COMMANDS_MARKUP = ReplyKeyboardMarkup(reply_keyboard,
+                                      resize_keyboard=True)
 
 
 async def start_command(update: Update, context: CallbackContext):
@@ -104,17 +105,17 @@ def main():
 
     all_handlers = []
 
-    command_handlers = {"start": start_command, "help": help_command}
-    for command, function in command_handlers.items():
-        all_handlers.append(CommandHandler(command, function))
-
+    help_handler = CommandHandler("help", help_command)
+    start_handler = CommandHandler("start", start_command)
     unknown_text_handler = MessageHandler(filters.ALL, unknown_message_command)
     top_tracks_command_handler = CommandHandler("top_tracks", top_tracks_world_command)
     top_tracks_ru_handler = CommandHandler("top_tracks_ru", top_tracks_ru_command)
     recognized_command_handler = CommandHandler("recognized", recognized_command)
 
-    all_handlers.append(recognized_command_handler)
     all_handlers.append(shazam_handler)
+    all_handlers.append(help_handler)
+    all_handlers.append(start_handler)
+    all_handlers.append(recognized_command_handler)
     all_handlers.append(top_tracks_command_handler)
     all_handlers.append(top_tracks_ru_handler)
     all_handlers.append(unknown_text_handler)
