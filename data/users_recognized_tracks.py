@@ -2,8 +2,8 @@ import sqlalchemy
 from data.db_session import SqlAlchemyBase
 
 
-class RecognizedTrack(SqlAlchemyBase):
-    __tablename__ = 'recognized_track'
+class UsersRecognizedTracks(SqlAlchemyBase):
+    __tablename__ = 'users_recognized_tracks'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     user_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)

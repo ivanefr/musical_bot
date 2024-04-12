@@ -4,17 +4,18 @@ from telegram.ext import (Application, CallbackContext, CommandHandler,
 from shazam import shazam_handler
 from top_tracks import get_top_tracks_in_country, get_top_world_tracks
 import os
-from database import get_tracks
+from database import get_users_tracks, get_count_tracks, get_count_users, add_user
 import pymorphy2
 
 reply_keyboard = [['/shazam', '/recognized'],
                   ['/top_tracks', '/top_tracks_ru'],
-                  ['/help']]
+                  ['/help', '/info']]
 COMMANDS_MARKUP = ReplyKeyboardMarkup(reply_keyboard,
                                       resize_keyboard=True)
 
 
 async def start_command(update: Update, context: CallbackContext):
+    add_user(update.message.chat_id)
     user = update.effective_user
     text = f"Привет {user.full_name}, я музыкальный бот, чтобы получить список комманд напишите\n/help"
     await update.message.reply_text(text, reply_markup=COMMANDS_MARKUP)
@@ -26,9 +27,26 @@ async def help_command(update: Update, context: CallbackContext):
                         "/shazam - распознавание музыки",
                         "/recognized - список распознанных треков",
                         "/top_tracks - самые часто распознаваемые треки в мире",
-                        "/top_tracks_ru - самые часто распознаваемые треки в России"]
+                        "/top_tracks_ru - самые часто распознаваемые треки в России",
+                        "/info - информация о боте"]
 
     await update.message.reply_text("\n".join(list_of_commands), reply_markup=COMMANDS_MARKUP)
+
+
+async def info_command(update: Update, context: CallbackContext):
+    count_users = get_count_users()
+    count_tracks = get_count_tracks()
+
+    parser = pymorphy2.MorphAnalyzer()
+    user = parser.parse("пользователь")[0].make_agree_with_number(count_users).word
+    track = parser.parse("треков")[0].make_agree_with_number(count_tracks).word
+    recognize = parser.parse("распознанный")[0].make_agree_with_number(count_tracks).word
+    text = f"""music_bot - музыкальный бот который поможет вам с распознаванием музыки. За всё время работы бота:
+    {count_users} {user}.
+    {count_tracks} {recognize} {track}.
+Подробнее о боте можно узнать <a href="https://github.com/ivanefr/musical_bot">здесь</a>.
+    """
+    await update.message.reply_text(text, parse_mode="HTML", reply_markup=COMMANDS_MARKUP)
 
 
 async def top_tracks_command(update: Update, context: CallbackContext, track_list, message):
@@ -62,7 +80,7 @@ async def top_tracks_ru_command(update: Update, context: CallbackContext):
 
 async def recognized_command(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
-    recognized_tracks = get_tracks(user_id)
+    recognized_tracks = get_users_tracks(user_id)
 
     if not recognized_tracks:
         text = "Вы ещё не распознали ни одного трека."
@@ -107,6 +125,7 @@ def main():
 
     help_handler = CommandHandler("help", help_command)
     start_handler = CommandHandler("start", start_command)
+    info_handler = CommandHandler("info", info_command)
     unknown_text_handler = MessageHandler(filters.ALL, unknown_message_command)
     top_tracks_command_handler = CommandHandler("top_tracks", top_tracks_world_command)
     top_tracks_ru_handler = CommandHandler("top_tracks_ru", top_tracks_ru_command)
@@ -115,6 +134,7 @@ def main():
     all_handlers.append(shazam_handler)
     all_handlers.append(help_handler)
     all_handlers.append(start_handler)
+    all_handlers.append(info_handler)
     all_handlers.append(recognized_command_handler)
     all_handlers.append(top_tracks_command_handler)
     all_handlers.append(top_tracks_ru_handler)
