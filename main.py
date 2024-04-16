@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import (Application, CallbackContext, CommandHandler,
                           MessageHandler, filters)
 from shazam import shazam_handler
@@ -44,9 +44,14 @@ async def info_command(update: Update, context: CallbackContext):
     text = f"""music_bot - музыкальный бот который поможет вам с распознаванием музыки. За всё время работы бота:
     {count_users} {user}.
     {count_tracks} {recognize} {track}.
-Подробнее о боте можно узнать <a href="https://github.com/ivanefr/musical_bot">здесь</a>.
-    """
-    await update.message.reply_text(text, parse_mode="HTML", reply_markup=COMMANDS_MARKUP)
+Подробнее о боте можно узнать ниже."""
+
+    inline_button = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Информация о боте", url="https://github.com/ivanefr/musical_bot")]]
+    )
+
+    await update.message.reply_text(text, reply_markup=inline_button, parse_mode="HTML")
+    await update.message.reply_text(" ", reply_markup=COMMANDS_MARKUP, parse_mode="HTML")
 
 
 async def top_tracks_command(update: Update, context: CallbackContext, track_list, message):
