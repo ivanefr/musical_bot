@@ -42,8 +42,10 @@ async def info_command(update: Update, context: CallbackContext):
     track = parser.parse("треков")[0].make_agree_with_number(count_tracks).word
     recognize = parser.parse("распознанный")[0].make_agree_with_number(count_tracks).word
     text = f"""music_bot - музыкальный бот который поможет вам с распознаванием музыки. За всё время работы бота:
+    
     {count_users} {user}.
     {count_tracks} {recognize} {track}.
+    
 Подробнее о боте можно узнать ниже."""
 
     inline_button = InlineKeyboardMarkup(
@@ -51,7 +53,6 @@ async def info_command(update: Update, context: CallbackContext):
     )
 
     await update.message.reply_text(text, reply_markup=inline_button, parse_mode="HTML")
-    await update.message.reply_text(" ", reply_markup=COMMANDS_MARKUP, parse_mode="HTML")
 
 
 async def top_tracks_command(update: Update, context: CallbackContext, track_list, message):
