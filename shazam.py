@@ -14,7 +14,6 @@ WAIT_VOICE = 1
 EXTRA_INFO = 2
 
 reply_keyboard = [['/shazam', '/recognized'],
-                  ['/top_tracks', '/top_tracks_ru'],
                   ['/help', '/info']]
 COMMANDS_MARKUP = ReplyKeyboardMarkup(reply_keyboard,
                                       resize_keyboard=True)
